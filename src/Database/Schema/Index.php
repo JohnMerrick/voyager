@@ -54,29 +54,29 @@ abstract class Index
     /**
      * @return array
      */
-    public static function toArray(DoctrineIndex $index)
+    public static function toArray($index)
     {
-        $name = $index->getName();
-        $columns = $index->getColumns();
+        $name = $index['name'];
+        $columns = $index['columns'];
 
         return [
             'name'        => $name,
             'oldName'     => $name,
             'columns'     => $columns,
             'type'        => static::getType($index),
-            'isPrimary'   => $index->isPrimary(),
-            'isUnique'    => $index->isUnique(),
+            'isPrimary'   => $index['primary'],
+            'isUnique'    => $index['unique'],
             'isComposite' => count($columns) > 1,
-            'flags'       => $index->getFlags(),
-            'options'     => $index->getOptions(),
+            // 'flags'       => $index->getFlags(),
+            // 'options'     => $index->getOptions(),
         ];
     }
 
-    public static function getType(DoctrineIndex $index)
+    public static function getType($index)
     {
-        if ($index->isPrimary()) {
+        if ($index['primary']) {
             return static::PRIMARY;
-        } elseif ($index->isUnique()) {
+        } elseif ($index['unique']) {
             return static::UNIQUE;
         } else {
             return static::INDEX;
