@@ -21,12 +21,12 @@
   "require": {
     "php": "^8.2|^8.3",
     "illuminate/support": "^11.0 || ^12.0",
+    "intervention/image": "^2.7|^3.0",
+    "doctrine/dbal": "^3.1|^3.5|^4.0",
     "laravel/ui": "^4.2",
     "arrilot/laravel-widgets": "^3.7",
     "league/flysystem": "~1.1|~2.0|~3.0",
-    "ext-json": "*",
-    "intervention/image-laravel": "*",
-    "doctrine/dbal": "^3.1|^3.5|^4.0"
+    "ext-json": "*"
   },
   "require-dev": {
     "phpunit/phpcov": ">=6.0",

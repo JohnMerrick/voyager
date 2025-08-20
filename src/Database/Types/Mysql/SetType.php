@@ -10,7 +10,7 @@ class SetType extends Type
 {
     public const NAME = 'set';
 
-    public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform): string
+    public function getSQLDeclaration(array $fieldDeclaration, AbstractPlatform $platform)
     {
         throw new \Exception('Set type is not supported');
         // we're going to store SET values in the comment since DBAL doesn't support

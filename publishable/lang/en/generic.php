@@ -46,7 +46,6 @@ return [
     'find_by_place'          => 'Find by Place',
     'home'                   => 'Home',
     'how_to_use'             => 'How To Use',
-    'impersonate'            => 'Impersonate',
     'index'                  => 'Index',
     'internal_error'         => 'Internal error',
     'items'                  => 'item(s)',

@@ -2,35 +2,33 @@
 
 namespace TCG\Voyager;
 
-use TCG\Voyager\Seed;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use TCG\Voyager\Models\Setting;
-use TCG\Voyager\Models\MenuItem;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\AliasLoader;
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Routing\Router;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\View;
-use TCG\Voyager\Policies\BasePolicy;
-use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Foundation\AliasLoader;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use TCG\Voyager\Policies\SettingPolicy;
-use TCG\Voyager\Policies\MenuItemPolicy;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str;
+use Intervention\Image\ImageServiceProvider;
 use TCG\Voyager\Events\FormFieldsRegistered;
 use TCG\Voyager\Facades\Voyager as VoyagerFacade;
 use TCG\Voyager\FormFields\After\DescriptionHandler;
-use TCG\Voyager\Http\Middleware\ImpersonateMiddleware;
+use TCG\Voyager\Http\Middleware\VoyagerAdminMiddleware;
+use TCG\Voyager\Models\MenuItem;
+use TCG\Voyager\Models\Setting;
+use TCG\Voyager\Policies\BasePolicy;
+use TCG\Voyager\Policies\MenuItemPolicy;
+use TCG\Voyager\Policies\SettingPolicy;
 use TCG\Voyager\Providers\VoyagerDummyServiceProvider;
 use TCG\Voyager\Providers\VoyagerEventServiceProvider;
-use TCG\Voyager\Http\Middleware\VoyagerAdminMiddleware;
+use TCG\Voyager\Seed;
 use TCG\Voyager\Translator\Collection as TranslatorCollection;
-use Intervention\Image\Laravel\ServiceProvider as ImageServiceProvider;
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class VoyagerServiceProvider extends ServiceProvider
 {
@@ -94,8 +92,7 @@ class VoyagerServiceProvider extends ServiceProvider
      *
      * @param \Illuminate\Routing\Router $router
      */
-    // public function boot(Router $router, Dispatcher $event)
-    public function boot()
+    public function boot(Router $router, Dispatcher $event)
     {
         if (config('voyager.user.add_default_role_on_register')) {
             $model = Auth::guard(app('VoyagerGuard'))->getProvider()->getModel();
@@ -110,11 +107,7 @@ class VoyagerServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'voyager');
 
-        Route::aliasMiddleware('admin.user', VoyagerAdminMiddleware::class);
-
-        $this->app->booted(function () {
-            Route::pushMiddlewareToGroup('web', ImpersonateMiddleware::class);
-        });
+        $router->aliasMiddleware('admin.user', VoyagerAdminMiddleware::class);
 
         $this->loadTranslationsFrom(realpath(__DIR__.'/../publishable/lang'), 'voyager');
 
@@ -130,7 +123,7 @@ class VoyagerServiceProvider extends ServiceProvider
 
         $this->registerViewComposers();
 
-        Event::listen('voyager.alerts.collecting', function () {
+        $event->listen('voyager.alerts.collecting', function () {
             $this->addStorageSymlinkAlert();
         });
 
@@ -139,10 +132,6 @@ class VoyagerServiceProvider extends ServiceProvider
         if (method_exists('Paginator', 'useBootstrap')) {
             Paginator::useBootstrap();
         }
-
-        Blade::if('impersonating', function () {
-            return session()->has('impersonate');
-        });
     }
 
     /**
@@ -339,7 +328,6 @@ class VoyagerServiceProvider extends ServiceProvider
             'select_multiple',
             'text',
             'text_area',
-            'array_text_area',
             'time',
             'timestamp',
             'hidden',

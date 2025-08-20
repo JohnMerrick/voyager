@@ -125,7 +125,10 @@ exports.handler.addCommands([{
         name: "goToNextError"
     }, {
         bindKey: { mac: "Command-Shift-P|F1", win: "Ctrl-Shift-P|F1" },
-        name: "openCommandPalette"
+        name: "openCommandPallete"
+    }, {
+        bindKey: { mac: "Command-K|Command-S", win: "Ctrl-K|Ctrl-S" },
+        name: "showKeyboardShortcuts"
     }, {
         bindKey: { mac: "Shift-Option-Up", win: "Alt-Shift-Up" },
         name: "copylinesup"

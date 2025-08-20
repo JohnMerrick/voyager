@@ -2,13 +2,15 @@
 
 namespace TCG\Voyager\Database\Schema;
 
+use Doctrine\DBAL\Schema\SchemaException;
+use Doctrine\DBAL\Schema\Table as DoctrineTable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use TCG\Voyager\Database\Schema\Table;
-
+use TCG\Voyager\Database\Types\Type;
 
 abstract class SchemaManager
 {
+    // todo: trim parameters
+
     public static function __callStatic($method, $args)
     {
         return static::manager()->$method(...$args);
@@ -16,12 +18,12 @@ abstract class SchemaManager
 
     public static function manager()
     {
-        return DB::connection();
+        return DB::connection()->getDoctrineSchemaManager();
     }
 
     public static function getDatabaseConnection()
     {
-        return DB::connection();
+        return DB::connection()->getDoctrineConnection();
     }
 
     public static function tableExists($table)
@@ -30,156 +32,112 @@ abstract class SchemaManager
             $table = [$table];
         }
 
-        return Schema::hasTable($table[0]);
+        return static::manager()->tablesExist($table);
     }
 
     public static function listTables()
     {
         $tables = [];
-        $tableNames = static::manager()->listTableNames();
 
-        foreach ($tableNames as $tableName) {
+        foreach (static::manager()->listTableNames() as $tableName) {
             $tables[$tableName] = static::listTableDetails($tableName);
         }
 
         return $tables;
     }
 
+    /**
+     * @param string $tableName
+     *
+     * @return \TCG\Voyager\Database\Schema\Table
+     */
     public static function listTableDetails($tableName)
     {
-        $columns = Schema::getColumnListing($tableName);
+        $columns = static::manager()->listTableColumns($tableName);
 
-        $columnDetails = collect($columns)->mapWithKeys(function ($column) use ($tableName) {
-            return [$column => static::getColumnDetails($tableName, $column)];
-        });
+        $foreignKeys = [];
+        if (static::manager()->getDatabasePlatform()->supportsForeignKeyConstraints()) {
+            $foreignKeys = static::manager()->listTableForeignKeys($tableName);
+        }
 
-        $indexes = static::getTableIndexes($tableName);
-        $foreignKeys = static::getTableForeignKeys($tableName);
+        $indexes = static::manager()->listTableIndexes($tableName);
 
-        return new Table($tableName, $columnDetails->toArray(), $indexes, [], $foreignKeys, []);
+        return new Table($tableName, $columns, $indexes, [], $foreignKeys, []);
     }
 
+    /**
+     * Describes given table.
+     *
+     * @param string $tableName
+     *
+     * @return \Illuminate\Support\Collection
+     */
     public static function describeTable($tableName)
     {
-        $columns = Schema::getColumnListing($tableName);
-        $columns = array_combine($columns, $columns);
+        Type::registerCustomPlatformTypes();
 
-        return collect($columns)->map(function ($column) use ($tableName) {
+        $table = static::listTableDetails($tableName);
 
-            $columnDetails = static::getColumnDetails($tableName, $column);
-            $columnDetails['field'] = $columnDetails['name'];
-            $columnDetails['oldName'] = $columnDetails['name'];
-            $columnDetails['indexes'] = [];
-            $columnDetails['key'] = null;
+        return collect($table->columns)->map(function ($column) use ($table) {
+            $columnArr = Column::toArray($column);
 
-            if($columnDetails['indexes'] = static::getColumnIndexes($tableName, $column)) {
+            $columnArr['field'] = $columnArr['name'];
+            $columnArr['type'] = $columnArr['type']['name'];
 
+            // Set the indexes and key
+            $columnArr['indexes'] = [];
+            $columnArr['key'] = null;
+            if ($columnArr['indexes'] = $table->getColumnsIndexes($columnArr['name'], true)) {
                 // Convert indexes to Array
-                foreach ($columnDetails['indexes'] as $name => $index) {
-                    $columnDetails['indexes'][$name] = Index::toArray($index);
+                foreach ($columnArr['indexes'] as $name => $index) {
+                    $columnArr['indexes'][$name] = Index::toArray($index);
                 }
 
-                $indexType = array_values($columnDetails['indexes'])[0]['type'];
-                $columnDetails['key'] = substr($indexType, 0, 3);
-
+                // If there are multiple indexes for the column
+                // the Key will be one with highest priority
+                $indexType = array_values($columnArr['indexes'])[0]['type'];
+                $columnArr['key'] = substr($indexType, 0, 3);
             }
-            // return [
-            //     'field' => $column,
-            //     'type' => $columnDetails['type'],
-            //     'null' => $columnDetails['nullable'],
-            //     'key' => !empty($indexes) ? substr($indexes[0]['type'], 0, 3) : null,
-            //     'default' => $columnDetails['default'],
-            //     'extra' => $columnDetails['auto_increment'] ? 'auto_increment' : '',
-            //     'indexes' => $indexes,
-            // ];
 
-            return $columnDetails;
+            return $columnArr;
         });
     }
 
     public static function listTableColumnNames($tableName)
     {
-        return Schema::getColumnListing($tableName);
+        Type::registerCustomPlatformTypes();
+
+        $columnNames = [];
+
+        foreach (static::manager()->listTableColumns($tableName) as $column) {
+            $columnNames[] = $column->getName();
+        }
+
+        return $columnNames;
     }
 
     public static function createTable($table)
     {
-        if ($table instanceof Blueprint) {
-            Schema::create($table->getTable(), function (Blueprint $blueprint) use ($table) {
-                foreach ($table->getColumns() as $column) {
-                    $blueprint->addColumn(
-                        $column->getType()->getName(),
-                        $column->getName(),
-                        $column->toArray()
-                    );
-                }
-            });
-        } else {
-            throw new \InvalidArgumentException('Table must be an instance of Blueprint');
-        }
-    }
-
-    protected static function getColumnDetails($table, $column)
-    {
-        $schema = Schema::getConnection()->getSchemaBuilder();
-        $columnType = $schema->getColumnType($table, $column);
-        $columnDefinition = $schema->getColumns($table);
-
-        $columnInfo = collect($columnDefinition)->firstWhere('name', $column);
-
-        if (!$columnInfo) {
-            throw new \InvalidArgumentException("Column '$column' not found in table '$table'.");
+        if (!($table instanceof DoctrineTable)) {
+            $table = Table::make($table);
         }
 
-        return [
-            'name' => $column,
-            'type' => $columnType,
-            'null' => $columnInfo['nullable'] ? 'YES' : 'NO',
-            'default' => $columnInfo['default'] ?? null,
-            'extra' => ($columnInfo['auto_increment'] ?? false),
-        ];
+        static::manager()->createTable($table);
     }
 
-    protected static function getTableIndexes($table)
+    public static function getDoctrineTable($table)
     {
-        return DB::getSchemaBuilder()->getIndexes($table);
-    }
+        $table = trim($table);
 
-    protected static function getColumnIndexes($table, $column)
-    {
-        $tableIndexes = static::getTableIndexes($table);
-
-        $matched = [];
-
-        foreach ($tableIndexes as $index) {
-            if (in_array($column, $index['columns'])) {
-                $matched[$index['name']] = $index;
-            }
+        if (!static::tableExists($table)) {
+            throw SchemaException::tableDoesNotExist($table);
         }
 
-        return $matched;
+        return static::manager()->listTableDetails($table);
     }
 
-    protected static function getTableForeignKeys($table)
+    public static function getDoctrineColumn($table, $column)
     {
-        return DB::getSchemaBuilder()->getForeignKeys($table);
-    }
-
-    public static function listTableNames()
-    {
-        $connection = Schema::getConnection();
-
-        // Check if the connection supports the getTables method
-        if (method_exists($connection->getSchemaBuilder(), 'getTables')) {
-            $tables = $connection->getSchemaBuilder()->getTables();
-            return collect($tables)->pluck('name')->values()->all();
-        }
-
-        // Fallback method if getTables is not available
-        $tables = $connection->getDoctrineSchemaManager()->listTableNames();
-
-        // Filter out tables that should be excluded (like migrations)
-        $excludedTables = ['migrations', 'failed_jobs', 'password_resets'];
-        return array_values(array_diff($tables, $excludedTables));
+        return static::getDoctrineTable($table)->getColumn($column);
     }
 }

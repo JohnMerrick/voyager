@@ -72,28 +72,25 @@ function getModeForPath(path) {
     }
     return mode;
 }
-var Mode = /** @class */ (function () {
-    function Mode(name, caption, extensions) {
-        this.name = name;
-        this.caption = caption;
-        this.mode = "ace/mode/" + name;
-        this.extensions = extensions;
-        var re;
-        if (/\^/.test(extensions)) {
-            re = extensions.replace(/\|(\^)?/g, function (a, b) {
-                return "$|" + (b ? "^" : "^.*\\.");
-            }) + "$";
-        }
-        else {
-            re = "^.*\\.(" + extensions + ")$";
-        }
-        this.extRe = new RegExp(re, "gi");
+var Mode = function (name, caption, extensions) {
+    this.name = name;
+    this.caption = caption;
+    this.mode = "ace/mode/" + name;
+    this.extensions = extensions;
+    var re;
+    if (/\^/.test(extensions)) {
+        re = extensions.replace(/\|(\^)?/g, function (a, b) {
+            return "$|" + (b ? "^" : "^.*\\.");
+        }) + "$";
     }
-    Mode.prototype.supportsFile = function (filename) {
-        return filename.match(this.extRe);
-    };
-    return Mode;
-}());
+    else {
+        re = "^.*\\.(" + extensions + ")$";
+    }
+    this.extRe = new RegExp(re, "gi");
+};
+Mode.prototype.supportsFile = function (filename) {
+    return filename.match(this.extRe);
+};
 var supportedModes = {
     ABAP: ["abap"],
     ABC: ["abc"],
@@ -105,9 +102,7 @@ var supportedModes = {
     AQL: ["aql"],
     AsciiDoc: ["asciidoc|adoc"],
     ASL: ["dsl|asl|asl.json"],
-    Assembly_ARM32: ["s"],
     Assembly_x86: ["asm|a"],
-    Astro: ["astro"],
     AutoHotKey: ["ahk"],
     BatchFile: ["bat|cmd"],
     BibTeX: ["bib"],
@@ -117,7 +112,7 @@ var supportedModes = {
     Clojure: ["clj|cljs"],
     Cobol: ["CBL|COB"],
     coffee: ["coffee|cf|cson|^Cakefile"],
-    ColdFusion: ["cfm|cfc"],
+    ColdFusion: ["cfm"],
     Crystal: ["cr"],
     CSharp: ["cs"],
     Csound_Document: ["csd"],
@@ -125,11 +120,9 @@ var supportedModes = {
     Csound_Score: ["sco"],
     CSS: ["css"],
     Curly: ["curly"],
-    Cuttlefish: ["conf"],
     D: ["d|di"],
     Dart: ["dart"],
     Diff: ["diff|patch"],
-    Django: ["djt|html.djt|dj.html|djhtml"],
     Dockerfile: ["^Dockerfile"],
     Dot: ["dot"],
     Drools: ["drl"],
@@ -139,7 +132,6 @@ var supportedModes = {
     Elixir: ["ex|exs"],
     Elm: ["elm"],
     Erlang: ["erl|hrl"],
-    Flix: ["flix"],
     Forth: ["frt|fs|ldr|fth|4th"],
     Fortran: ["f|f90"],
     FSharp: ["fsi|fs|ml|mli|fsx|fsscript"],
@@ -159,7 +151,7 @@ var supportedModes = {
     Haskell_Cabal: ["cabal"],
     haXe: ["hx"],
     Hjson: ["hjson"],
-    HTML: ["html|htm|xhtml|we|wpy"],
+    HTML: ["html|htm|xhtml|vue|we|wpy"],
     HTML_Elixir: ["eex|html.eex"],
     HTML_Ruby: ["erb|rhtml|html.erb"],
     INI: ["ini|conf|cfg|prefs"],
@@ -168,8 +160,7 @@ var supportedModes = {
     Jack: ["jack"],
     Jade: ["jade|pug"],
     Java: ["java"],
-    JavaScript: ["js|jsm|cjs|mjs"],
-    JEXL: ["jexl"],
+    JavaScript: ["js|jsm|jsx|cjs|mjs"],
     JSON: ["json"],
     JSON5: ["json5"],
     JSONiq: ["jq"],
@@ -186,7 +177,6 @@ var supportedModes = {
     LiveScript: ["ls"],
     Log: ["log"],
     LogiQL: ["logic|lql"],
-    Logtalk: ["lgt"],
     LSL: ["lsl"],
     Lua: ["lua"],
     LuaPage: ["lp"],
@@ -202,7 +192,6 @@ var supportedModes = {
     MIXAL: ["mixal"],
     MUSHCode: ["mc|mush"],
     MySQL: ["mysql"],
-    Nasal: ["nas"],
     Nginx: ["nginx|conf"],
     Nim: ["nim"],
     Nix: ["nix"],
@@ -210,22 +199,19 @@ var supportedModes = {
     Nunjucks: ["nunjucks|nunjs|nj|njk"],
     ObjectiveC: ["m|mm"],
     OCaml: ["ml|mli"],
-    Odin: ["odin"],
     PartiQL: ["partiql|pql"],
     Pascal: ["pas|p"],
     Perl: ["pl|pm"],
     pgSQL: ["pgsql"],
-    PHP: ["php|inc|phtml|shtml|php3|php4|php5|phps|phpt|aw|ctp|module"],
     PHP_Laravel_blade: ["blade.php"],
+    PHP: ["php|inc|phtml|shtml|php3|php4|php5|phps|phpt|aw|ctp|module"],
     Pig: ["pig"],
-    PLSQL: ["plsql"],
     Powershell: ["ps1"],
     Praat: ["praat|praatscript|psc|proc"],
     Prisma: ["prisma"],
     Prolog: ["plg|prolog"],
     Properties: ["properties"],
     Protobuf: ["proto"],
-    PRQL: ["prql"],
     Puppet: ["epp|pp"],
     Python: ["py"],
     QML: ["qml"],
@@ -254,7 +240,6 @@ var supportedModes = {
     snippets: ["snippets"],
     Soy_Template: ["soy"],
     Space: ["space"],
-    SPARQL: ["rq"],
     SQL: ["sql"],
     SQLServer: ["sqlserver"],
     Stylus: ["styl|stylus"],
@@ -267,22 +252,20 @@ var supportedModes = {
     Textile: ["textile"],
     Toml: ["toml"],
     TSX: ["tsx"],
-    Turtle: ["ttl"],
     Twig: ["twig|swig"],
-    Typescript: ["ts|mts|cts|typescript|str"],
+    Typescript: ["ts|typescript|str"],
     Vala: ["vala"],
     VBScript: ["vbs|vb"],
     Velocity: ["vm"],
     Verilog: ["v|vh|sv|svh"],
     VHDL: ["vhd|vhdl"],
     Visualforce: ["vfp|component|page"],
-    Vue: ["vue"],
     Wollok: ["wlk|wpgm|wtest"],
     XML: ["xml|rdf|rss|wsdl|xslt|atom|mathml|mml|xul|xbl|xaml"],
     XQuery: ["xq"],
     YAML: ["yaml|yml"],
     Zeek: ["zeek|bro"],
-    Zig: ["zig"]
+    Django: ["html"]
 };
 var nameOverrides = {
     ObjectiveC: "Objective-C",
@@ -332,8 +315,7 @@ var themeData = [
     ["Dawn"],
     ["Dreamweaver"],
     ["Eclipse"],
-    ["GitHub Light Default"],
-    ["GitHub (Legacy)", "github", "light"],
+    ["GitHub"],
     ["IPlastic"],
     ["Solarized Light"],
     ["TextMate"],
@@ -342,7 +324,6 @@ var themeData = [
     ["Kuroir"],
     ["KatzenMilch"],
     ["SQL Server", "sqlserver", "light"],
-    ["CloudEditor", "cloud_editor", "light"],
     ["Ambiance", "ambiance", "dark"],
     ["Chaos", "chaos", "dark"],
     ["Clouds Midnight", "clouds_midnight", "dark"],
@@ -366,9 +347,7 @@ var themeData = [
     ["Tomorrow Night Bright", "tomorrow_night_bright", "dark"],
     ["Tomorrow Night 80s", "tomorrow_night_eighties", "dark"],
     ["Twilight", "twilight", "dark"],
-    ["Vibrant Ink", "vibrant_ink", "dark"],
-    ["GitHub Dark", "github_dark", "dark"],
-    ["CloudEditor Dark", "cloud_editor_dark", "dark"]
+    ["Vibrant Ink", "vibrant_ink", "dark"]
 ];
 exports.themesByName = {};
 exports.themes = themeData.map(function (data) {
@@ -574,36 +553,24 @@ var optionGroups = {
         },
         "Custom scrollbar": {
             path: "customScrollbar"
-        },
-        "Use SVG gutter icons": {
-            path: "useSvgGutterIcons"
-        },
-        "Annotations for folded lines": {
-            path: "showFoldedAnnotations"
-        },
-        "Keyboard Accessibility Mode": {
-            path: "enableKeyboardAccessibility"
-        },
-        "Gutter tooltip follows mouse": {
-            path: "tooltipFollowsMouse",
-            defaultValue: true
         }
     }
 };
-var OptionPanel = /** @class */ (function () {
-    function OptionPanel(editor, element) {
-        this.editor = editor;
-        this.container = element || document.createElement("div");
-        this.groups = [];
-        this.options = {};
-    }
-    OptionPanel.prototype.add = function (config) {
+var OptionPanel = function (editor, element) {
+    this.editor = editor;
+    this.container = element || document.createElement("div");
+    this.groups = [];
+    this.options = {};
+};
+(function () {
+    oop.implement(this, EventEmitter);
+    this.add = function (config) {
         if (config.Main)
             oop.mixin(optionGroups.Main, config.Main);
         if (config.More)
             oop.mixin(optionGroups.More, config.More);
     };
-    OptionPanel.prototype.render = function () {
+    this.render = function () {
         this.container.innerHTML = "";
         buildDom(["table", { role: "presentation", id: "controls" },
             this.renderOptionGroup(optionGroups.Main),
@@ -615,7 +582,7 @@ var OptionPanel = /** @class */ (function () {
             ["tr", null, ["td", { colspan: 2 }, "version " + config.version]]
         ], this.container);
     };
-    OptionPanel.prototype.renderOptionGroup = function (group) {
+    this.renderOptionGroup = function (group) {
         return Object.keys(group).map(function (key, i) {
             var item = group[key];
             if (!item.position)
@@ -629,7 +596,7 @@ var OptionPanel = /** @class */ (function () {
             return this.renderOption(item.label, item);
         }, this);
     };
-    OptionPanel.prototype.renderOptionControl = function (key, option) {
+    this.renderOptionControl = function (key, option) {
         var self = this;
         if (Array.isArray(option)) {
             return option.map(function (x) {
@@ -716,7 +683,7 @@ var OptionPanel = /** @class */ (function () {
         }
         return control;
     };
-    OptionPanel.prototype.renderOption = function (key, option) {
+    this.renderOption = function (key, option) {
         if (option.path && !option.onchange && !this.editor.$options[option.path])
             return;
         var path = Array.isArray(option) ? option[0].path : option.path;
@@ -728,7 +695,7 @@ var OptionPanel = /** @class */ (function () {
                 ["label", { for: safeKey, id: safeId }, key]
             ], ["td", control]];
     };
-    OptionPanel.prototype.setOption = function (option, value) {
+    this.setOption = function (option, value) {
         if (typeof option == "string")
             option = this.options[option];
         if (value == "false")
@@ -747,14 +714,12 @@ var OptionPanel = /** @class */ (function () {
             this.editor.setOption(option.path, value);
         this._signal("setOption", { name: option.path, value: value });
     };
-    OptionPanel.prototype.getOption = function (option) {
+    this.getOption = function (option) {
         if (option.getValue)
             return option.getValue();
         return this.editor.getOption(option.path);
     };
-    return OptionPanel;
-}());
-oop.implement(OptionPanel.prototype, EventEmitter);
+}).call(OptionPanel.prototype);
 exports.OptionPanel = OptionPanel;
 
 });
