@@ -2,27 +2,28 @@
 
 namespace TCG\Voyager\Http\Controllers;
 
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
+use Validator;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Routing\Controller as BaseController;
-use Illuminate\Support\Facades\Storage;
 use TCG\Voyager\Events\FileDeleted;
-use TCG\Voyager\Http\Controllers\ContentTypes\Checkbox;
-use TCG\Voyager\Http\Controllers\ContentTypes\Coordinates;
-use TCG\Voyager\Http\Controllers\ContentTypes\File;
-use TCG\Voyager\Http\Controllers\ContentTypes\Image as ContentImage;
-use TCG\Voyager\Http\Controllers\ContentTypes\MultipleCheckbox;
-use TCG\Voyager\Http\Controllers\ContentTypes\MultipleImage;
-use TCG\Voyager\Http\Controllers\ContentTypes\Password;
-use TCG\Voyager\Http\Controllers\ContentTypes\Relationship;
-use TCG\Voyager\Http\Controllers\ContentTypes\SelectMultiple;
-use TCG\Voyager\Http\Controllers\ContentTypes\Text;
-use TCG\Voyager\Http\Controllers\ContentTypes\Timestamp;
 use TCG\Voyager\Traits\AlertsMessages;
-use Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use TCG\Voyager\Http\Controllers\ContentTypes\File;
+use TCG\Voyager\Http\Controllers\ContentTypes\Text;
+use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use TCG\Voyager\Http\Controllers\ContentTypes\Checkbox;
+use TCG\Voyager\Http\Controllers\ContentTypes\Password;
+use TCG\Voyager\Http\Controllers\ContentTypes\TextArray;
+use TCG\Voyager\Http\Controllers\ContentTypes\Timestamp;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use TCG\Voyager\Http\Controllers\ContentTypes\Coordinates;
+use TCG\Voyager\Http\Controllers\ContentTypes\Relationship;
+use TCG\Voyager\Http\Controllers\ContentTypes\MultipleImage;
+use TCG\Voyager\Http\Controllers\ContentTypes\SelectMultiple;
+use TCG\Voyager\Http\Controllers\ContentTypes\MultipleCheckbox;
+use TCG\Voyager\Http\Controllers\ContentTypes\Image as ContentImage;
 
 abstract class Controller extends BaseController
 {
@@ -168,10 +169,10 @@ abstract class Controller extends BaseController
                 $data->{$row->field} = str_replace($uuid, $data->getKey(), $data->{$row->field});
             });
             $data->save();
-            if ($old_path != $new_path && 
-                !Storage::disk(config('voyager.storage.disk'))->exists($new_path) && 
+            if ($old_path != $new_path &&
+                !Storage::disk(config('voyager.storage.disk'))->exists($new_path) &&
                 Storage::disk(config('voyager.storage.disk'))->exists($old_path)
-                ) 
+                )
             {
                 $request->session()->forget([$slug.'_path', $slug.'_uuid']);
                 Storage::disk(config('voyager.storage.disk'))->move($old_path, $new_path);
@@ -258,6 +259,9 @@ abstract class Controller extends BaseController
     public function getContentBasedOnType(Request $request, $slug, $row, $options = null)
     {
         switch ($row->type) {
+            /********** ARRAY TEXT AREA TYPE **********/
+            case 'array_text_area':
+                return (new TextArray($request, $slug, $row, $options))->handle();
             /********** PASSWORD TYPE **********/
             case 'password':
                 return (new Password($request, $slug, $row, $options))->handle();

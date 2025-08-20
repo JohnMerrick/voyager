@@ -2,10 +2,11 @@
 
 use Illuminate\Support\Str;
 use TCG\Voyager\Events\Routing;
-use TCG\Voyager\Events\RoutingAdmin;
-use TCG\Voyager\Events\RoutingAdminAfter;
-use TCG\Voyager\Events\RoutingAfter;
 use TCG\Voyager\Facades\Voyager;
+use TCG\Voyager\Events\RoutingAdmin;
+use TCG\Voyager\Events\RoutingAfter;
+use Illuminate\Support\Facades\Route;
+use TCG\Voyager\Events\RoutingAdminAfter;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +25,17 @@ Route::group(['as' => 'voyager.'], function () {
 
     Route::get('login', ['uses' => $namespacePrefix.'VoyagerAuthController@login',     'as' => 'login']);
     Route::post('login', ['uses' => $namespacePrefix.'VoyagerAuthController@postLogin', 'as' => 'postlogin']);
+
+    Route::group(['middleware' => 'web'], function () use ($namespacePrefix) {
+
+        Route::group([
+            'as'     => 'impersonate.',
+            'prefix' => 'impersonate',
+        ], function () use ($namespacePrefix) {
+            Route::delete('/', ['uses' => $namespacePrefix.'ImpersonateController@destroy', 'as' => 'destroy']);
+        });
+
+    });
 
     Route::group(['middleware' => 'admin.user'], function () use ($namespacePrefix) {
         event(new RoutingAdmin());
@@ -127,6 +139,14 @@ Route::group(['as' => 'voyager.'], function () {
         ], function () use ($namespacePrefix) {
             Route::get('/', ['uses' => $namespacePrefix.'VoyagerCompassController@index',  'as' => 'index']);
             Route::post('/', ['uses' => $namespacePrefix.'VoyagerCompassController@index',  'as' => 'post']);
+        });
+
+        // User Impersonation
+        Route::group([
+            'as'     => 'impersonate.',
+            'prefix' => 'impersonate',
+        ], function () use ($namespacePrefix) {
+            Route::get('/', ['uses' => $namespacePrefix.'ImpersonateController@impersonate', 'as' => 'impersonate']);
         });
 
         event(new RoutingAdminAfter());

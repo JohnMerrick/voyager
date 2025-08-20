@@ -163,7 +163,7 @@
 
                                                 @elseif($row->type == 'date' || $row->type == 'timestamp')
                                                     @if ( property_exists($row->details, 'format') && !is_null($data->{$row->field}) )
-                                                        {{ \Carbon\Carbon::parse($data->{$row->field})->formatLocalized($row->details->format) }}
+                                                        {{ \Carbon\Carbon::parse($data->{$row->field})->format('Y-m-d H:i:s') }}
                                                     @else
                                                         {{ $data->{$row->field} }}
                                                     @endif
@@ -182,6 +182,9 @@
                                                 @elseif($row->type == 'text')
                                                     @include('voyager::multilingual.input-hidden-bread-browse')
                                                     <div>{{ mb_strlen( $data->{$row->field} ) > 200 ? mb_substr($data->{$row->field}, 0, 200) . ' ...' : $data->{$row->field} }}</div>
+                                                @elseif($row->type == 'array_text_area')
+                                                    @include('voyager::multilingual.input-hidden-bread-browse')
+                                                    <div>{{ json_encode($data->{$row->field}) }}</div>
                                                 @elseif($row->type == 'text_area')
                                                     @include('voyager::multilingual.input-hidden-bread-browse')
                                                     <div>{{ mb_strlen( $data->{$row->field} ) > 200 ? mb_substr($data->{$row->field}, 0, 200) . ' ...' : $data->{$row->field} }}</div>
