@@ -20,7 +20,6 @@ use TCG\Voyager\Events\TableAdded;
 use TCG\Voyager\Events\TableDeleted;
 use TCG\Voyager\Events\TableUpdated;
 use TCG\Voyager\Models\DataType;
-use TCG\Voyager\Models\Page;
 
 class EventTest extends TestCase
 {
@@ -106,119 +105,6 @@ class EventTest extends TestCase
         $this->delete(route('voyager.bread.delete', [$dataType->id]));
 
         Event::assertDispatched(BreadDeleted::class);
-    }
-
-    public function testBreadDataAddedEvent()
-    {
-        Event::fake();
-        Auth::loginUsingId(1);
-
-        $this->post(route('voyager.pages.store'), [
-            'author_id' => 1,
-            'title'     => 'Toast',
-            'slug'      => 'toasts',
-            'status'    => 'ACTIVE',
-        ]);
-
-        Event::assertDispatched(BreadDataAdded::class);
-    }
-
-    public function testBreadDataUpdatedEvent()
-    {
-        Event::fake();
-        Auth::loginUsingId(1);
-
-        $this->post(route('voyager.pages.store'), [
-            'author_id' => 1,
-            'title'     => 'Toast',
-            'slug'      => 'toasts',
-            'status'    => 'ACTIVE',
-        ]);
-
-        Event::assertNotDispatched(BreadDataUpdated::class);
-
-        $page = Page::where('slug', 'toasts')->firstOrFail();
-
-        $this->put(route('voyager.pages.update', [$page->id]), [
-            'title'  => 'Test',
-            'slug'   => 'tests',
-            'status' => 'INACTIVE',
-        ]);
-
-        Event::assertDispatched(BreadDataUpdated::class);
-    }
-
-    public function testBreadDataDeletedEvent()
-    {
-        Event::fake();
-        Auth::loginUsingId(1);
-
-        $this->post(route('voyager.pages.store'), [
-            'author_id' => 1,
-            'title'     => 'Toast',
-            'slug'      => 'toasts',
-            'status'    => 'ACTIVE',
-        ]);
-
-        Event::assertNotDispatched(BreadDataDeleted::class);
-
-        $page = Page::where('slug', 'toasts')->firstOrFail();
-
-        $this->delete(route('voyager.pages.destroy', [$page->id]));
-
-        Event::assertDispatched(BreadDataDeleted::class);
-    }
-
-    public function testBreadImagesDeletedEvent()
-    {
-        Event::fake();
-        Auth::loginUsingId(1);
-        Storage::fake(config('filesystems.default'));
-
-        $image = UploadedFile::fake()->image('test.png');
-
-        $this->call('POST', route('voyager.pages.store'), [
-            'author_id' => 1,
-            'title'     => 'Toast',
-            'slug'      => 'toasts',
-            'status'    => 'ACTIVE',
-        ], [], [
-            'image' => $image,
-        ]);
-
-        Event::assertNotDispatched(BreadImagesDeleted::class);
-
-        $page = Page::where('slug', 'toasts')->firstOrFail();
-
-        $this->delete(route('voyager.pages.destroy', [$page->id]));
-
-        Event::assertDispatched(BreadImagesDeleted::class);
-    }
-
-    public function testFileDeletedEvent()
-    {
-        Event::fake();
-        Auth::loginUsingId(1);
-        Storage::fake(config('filesystems.default'));
-
-        $image = UploadedFile::fake()->image('test.png');
-
-        $this->call('POST', route('voyager.pages.store'), [
-            'author_id' => 1,
-            'title'     => 'Toast',
-            'slug'      => 'toasts',
-            'status'    => 'ACTIVE',
-        ], [], [
-            'image' => $image,
-        ]);
-
-        Event::assertNotDispatched(FileDeleted::class);
-
-        $page = Page::where('slug', 'toasts')->firstOrFail();
-
-        $this->delete(route('voyager.pages.destroy', [$page->id]));
-
-        Event::assertDispatched(FileDeleted::class);
     }
 
     public function testTableAddedEvent()

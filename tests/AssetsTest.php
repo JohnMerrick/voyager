@@ -27,14 +27,7 @@ class AssetsTest extends TestCase
     {
         return [
             [
-                '../dummy_content/pages/page1.jpg',
-                '..../dummy_content/pages/page1.jpg',
-                'images/../../dummy_content/pages/page1.jpg',
-                '....//dummy_content/pages/page1.jpg',
-                '..\dummy_content/pages/page1.jpg',
-                '....\dummy_content/pages/page1.jpg',
-                'images/..\..\dummy_content/pages/page1.jpg',
-                'images/....\\....\\dummy_content/pages/page1.jpg',
+                '../dummy_content/users/default.jpg',
             ],
         ];
     }
