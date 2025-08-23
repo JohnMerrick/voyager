@@ -1,6 +1,6 @@
 # Configurations
 
-With the installation of Voyager you will find a new configuration file located at `config/voyager.php`.  
+With the installation of Voyager you will find a new configuration file located at `config/voyager.php`.
 In this file you can find various options to change the configuration of your Voyager installation.
 
 {% hint style="info" %}
@@ -23,10 +23,10 @@ Below we will take a deep dive into the configuration file and give a detailed d
 ],
 ```
 
-**add\_default\_role\_on\_register:** Specify whether you would like to add the default role to any new user that is created.  
-**default\_role:** You can also specify what the **default\_role** is of the user.  
-**admin\_permission:** The permission needed to view the admin dashboard.  
-**namespace:** The namespace of your apps User Class.  
+**add\_default\_role\_on\_register:** Specify whether you would like to add the default role to any new user that is created.
+**default\_role:** You can also specify what the **default\_role** is of the user.
+**admin\_permission:** The permission needed to view the admin dashboard.
+**namespace:** The namespace of your apps User Class.
 **redirect:** Redirect path after the user logged in.
 
 ## Controller
@@ -42,8 +42,8 @@ Below we will take a deep dive into the configuration file and give a detailed d
 You can specify the default `controller` namespace of Voyager. If you ever wish to override any of the core functionality of Voyager you can do so by duplicating the Voyager controllers and specifying the location of your custom controllers.
 
 {% hint style="info" %}
-**Overwrite a single controller**  
-If you only want to overwrite a single controller, you might consider adding the following piece of code to your `AppServiceProvider` class in the `register` method.  
+**Overwrite a single controller**
+If you only want to overwrite a single controller, you might consider adding the following piece of code to your `AppServiceProvider` class in the `register` method.
 `$this->app->bind(VoyagerBreadController::class, MyBreadController::class);`
 {% endhint %}
 
@@ -98,7 +98,7 @@ By default Voyager is going to use the `public` local storage. You can additiona
 ],
 ```
 
-You may wish to hide some database tables in the Voyager database section. In the database config you can choose which tables would like to hide.  
+You may wish to hide some database tables in the Voyager database section. In the database config you can choose which tables would like to hide.
 `autoload_migrations` allows you to exclude Voyagers migration-files from loading when running `php artisan migrate`.
 
 ## Multilingual
@@ -144,8 +144,6 @@ Read more about multilanguage [here](../core-concepts/multilanguage.md).
     ],
     'widgets' => [
         'TCG\\Voyager\\Widgets\\UserDimmer',
-        'TCG\\Voyager\\Widgets\\PostDimmer',
-        'TCG\\Voyager\\Widgets\\PageDimmer',
     ],
 ],
 ```

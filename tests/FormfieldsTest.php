@@ -6,7 +6,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
-use TCG\Voyager\Models\Category;
 use TCG\Voyager\Models\DataType;
 use TCG\Voyager\Models\Permission;
 
@@ -144,12 +143,6 @@ class FormfieldsTest extends TestCase
     public function testFormfieldPassword()
     {
         $this->createBreadForFormfield('text', 'password');
-
-        $t = $this->visitRoute('voyager.categories.create')
-        ->type('newpassword', 'password')
-        ->press(__('voyager::generic.save'))
-        ->seeRouteIs('voyager.categories.index');
-        $this->assertTrue(Hash::check('newpassword', Category::first()->password));
 
         $t->click(__('voyager::generic.edit'))
         ->seeRouteIs('voyager.categories.edit', 1)

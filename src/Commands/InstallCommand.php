@@ -123,7 +123,7 @@ class InstallCommand extends Command
 
         if ($this->option('with-dummy')) {
             $this->info('Publishing dummy content');
-            $tags = ['dummy_seeders', 'dummy_content', 'dummy_config', 'dummy_migrations'];
+            $tags = ['dummy_seeders', 'dummy_content', 'dummy_config'];
             $this->call('vendor:publish', ['--provider' => VoyagerDummyServiceProvider::class, '--tag' => $tags]);
         } else {
             $this->call('vendor:publish', ['--provider' => VoyagerServiceProvider::class, '--tag' => ['config', 'voyager_avatar']]);
