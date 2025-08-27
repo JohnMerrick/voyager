@@ -26,7 +26,7 @@ class ImpersonateAction extends AbstractAction
         ];
     }
 
-    public function shouldActionDisplayOnDataType()
+    public function shouldActionDisplayOnDataType():bool
     {
         return $this->dataType->slug == 'users';
     }

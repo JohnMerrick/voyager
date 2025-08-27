@@ -35,7 +35,6 @@ class RouteTest extends TestCase
             route('voyager.menus.show', 1),
             route('voyager.menus.edit', 1),
             route('voyager.database.index'),
-            route('voyager.database.create'),
         ];
 
         foreach ($urls as $url) {

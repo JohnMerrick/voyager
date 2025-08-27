@@ -15,9 +15,22 @@ abstract class AbstractAction implements ActionInterface
 
     public function getDataType()
     {
+        return $this->dataType;
     }
 
     public function getPolicy()
+    {
+    }
+
+    public function getTitle()
+    {
+    }
+
+    public function getIcon()
+    {
+    }
+
+    public function getDefaultRoute()
     {
     }
 
@@ -46,9 +59,11 @@ abstract class AbstractAction implements ActionInterface
         return implode(" ", $result);
     }
 
-    public function shouldActionDisplayOnDataType()
+    public function shouldActionDisplayOnDataType(): bool
     {
-        return $this->dataType->name === $this->getDataType() || $this->getDataType() === null;
+        $dt = $this->getDataType(); // string|null
+
+        return $dt === null || ($this->dataType?->name === $dt);
     }
 
     public function shouldActionDisplayOnRow($row)

@@ -79,7 +79,7 @@ class MenuTest extends TestCase
     public function testCanOrderMenu()
     {
         $menu = Menu::where('name', '=', 'admin')->first();
-        $response = $this->post('http://localhost/admin/menus/1/order', ['order' => '[{"id":4},{"id":1},{"id":3},{"id":2},{"id":5,"children":[{"id":6},{"id":7},{"id":8},{"id":9},{"id":11}]},{"id":10},{"id":12}]']);
+        $response = $this->post(route('voyager.menus.order_item', ['menu' => $menu->id]), ['order' => '[{"id":4},{"id":1},{"id":3},{"id":2},{"id":5,"children":[{"id":6},{"id":7},{"id":8},{"id":9}]},{"id":10}]']);
         $this->assertEquals(200, $response->response->status());
     }
 
