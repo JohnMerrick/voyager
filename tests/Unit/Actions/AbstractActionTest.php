@@ -3,8 +3,11 @@
 namespace TCG\Voyager\Tests\Unit\Actions;
 
 use TCG\Voyager\Actions\AbstractAction;
+use TCG\Voyager\Actions\DeleteAction;
+use TCG\Voyager\Actions\EditAction;
+use TCG\Voyager\Actions\RestoreAction;
+use TCG\Voyager\Actions\ViewAction;
 use TCG\Voyager\Facades\Voyager;
-use TCG\Voyager\Models\User;
 use TCG\Voyager\Tests\TestCase;
 
 class AbstractActionTest extends TestCase
@@ -23,6 +26,50 @@ class AbstractActionTest extends TestCase
      */
     protected $user;
 
+    private function makeTestAction(?callable $dataTypeResolver = null, array $attributes = [], $defaultRoute = true): AbstractAction
+    {
+        return new class($this->userDataType, $this->user, $dataTypeResolver, $attributes, $defaultRoute) extends AbstractAction
+        {
+            private $dataTypeResolver;
+            private $attributes;
+            private $defaultRoute;
+
+            public function __construct($dataType, $data, ?callable $dataTypeResolver, array $attributes, $defaultRoute)
+            {
+                parent::__construct($dataType, $data);
+
+                $this->dataTypeResolver = $dataTypeResolver;
+                $this->attributes = $attributes;
+                $this->defaultRoute = $defaultRoute;
+            }
+
+            public function getTitle()
+            {
+                return 'Test Action';
+            }
+
+            public function getIcon()
+            {
+                return 'voyager-eye';
+            }
+
+            public function getDataType()
+            {
+                return $this->dataTypeResolver ? ($this->dataTypeResolver)() : null;
+            }
+
+            public function getAttributes()
+            {
+                return $this->attributes;
+            }
+
+            public function getDefaultRoute()
+            {
+                return $this->defaultRoute;
+            }
+        };
+    }
+
     public function setUp(): void
     {
         parent::setUp();
@@ -38,16 +85,7 @@ class AbstractActionTest extends TestCase
      */
     public function testGetRouteWithEmptyKey()
     {
-        $stub = $this->getMockBuilder(AbstractAction::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getDefaultRoute'])
-            ->getMock();;
-
-        // The `getDefaultRoute` method is called as default inside the
-        // `getRoute` method to retrieve the route.
-        $stub->expects($this->any())
-             ->method('getDefaultRoute')
-             ->willReturn(true);
+        $stub = $this->makeTestAction(defaultRoute: true);
 
         $this->assertTrue($stub->getRoute($this->userDataType->name));
     }
@@ -58,37 +96,51 @@ class AbstractActionTest extends TestCase
      */
     public function testConvertAttributesToHtml()
     {
-        $stub = $this->getMockBuilder(AbstractAction::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['getAttributes'])
-            ->getMock();
-
-        $stub->expects($this->any())
-             ->method('getAttributes')
-             ->willReturn([
-                 'class'   => 'class1 class2',
-                 'data-id' => 5,
-                 'id'      => 'delete-5',
-             ]);
+        $stub = $this->makeTestAction(attributes: [
+            'class'   => 'class1 class2',
+            'data-id' => 5,
+            'id'      => 'delete-5',
+        ]);
 
         $this->assertEquals('class="class1 class2" data-id="5" id="delete-5"', $stub->convertAttributesToHtml());
     }
 
     /**
-     * This test checks that `shouldActionDisplayOnDataType` method returns true
-     * if the action should be displayed for every data type.
+     * This test checks that `shouldActionDisplayOnDataType` returns true
+     * when no data type filter is defined.
      */
-    public function testShouldActionDisplayOnDataTypeWithDefaultDataType()
+    public function testShouldActionDisplayOnDataTypeReturnsTrueWhenNoDataTypeFilterIsDefined()
     {
-        $stub = $this->getMockBuilder(AbstractAction::class)
-            ->setConstructorArgs([$this->userDataType, $this->user])
-            ->onlyMethods(['getDataType']) // mock dependency
-            ->getMock();
-
-        $stub->method('getDataType')
-             ->willReturn($this->userDataType->name);
+        $stub = $this->makeTestAction(dataTypeResolver: fn () => null);
 
         $this->assertTrue($stub->shouldActionDisplayOnDataType());
+    }
+
+    /**
+     * This test checks that `shouldActionDisplayOnDataType` returns true
+     * when the action is filtered by the current DataType object.
+     */
+    public function testShouldActionDisplayOnDataTypeReturnsTrueWithMatchingDataTypeObject()
+    {
+        $stub = $this->makeTestAction(dataTypeResolver: fn () => $this->userDataType);
+
+        $this->assertTrue($stub->shouldActionDisplayOnDataType());
+    }
+
+    /**
+     * This test checks that the built-in actions are shown for their current
+     * data type unless they explicitly override the display rule.
+     */
+    public function testBuiltInActionsAreDisplayedForCurrentDataTypeByDefault()
+    {
+        foreach ([DeleteAction::class, EditAction::class, RestoreAction::class, ViewAction::class] as $actionClass) {
+            $action = new $actionClass($this->userDataType, $this->user);
+
+            $this->assertTrue(
+                $action->shouldActionDisplayOnDataType(),
+                sprintf('%s should be visible for the current data type.', $actionClass)
+            );
+        }
     }
 
     /**
@@ -97,14 +149,7 @@ class AbstractActionTest extends TestCase
      */
     public function testTrueIsReturnedIfDataTypeMatchesTheOneWhereTheActionWasCreatedFor()
     {
-        $stub = $this->getMockBuilder(AbstractAction::class)
-            ->setConstructorArgs([$this->userDataType, $this->user])
-            ->onlyMethods(['getDataType'])
-            ->getMock();
-
-        $stub->expects($this->any())
-             ->method('getDataType')
-             ->willReturn($this->userDataType->name);
+        $stub = $this->makeTestAction(dataTypeResolver: fn () => $this->userDataType->name);
 
         $this->assertTrue($stub->shouldActionDisplayOnDataType());
     }
@@ -115,14 +160,21 @@ class AbstractActionTest extends TestCase
      */
     public function testFalseIsReturnedIfDataTypeDoesNotMatchesTheOneWhereTheActionWasCreatedFor()
     {
-        $stub = $this->getMockBuilder(AbstractAction::class)
-            ->setConstructorArgs([$this->userDataType, $this->user])
-            ->onlyMethods(['getDataType'])
-            ->getMock();
+        $stub = $this->makeTestAction(dataTypeResolver: fn () => 'not users');
 
-        $stub->expects($this->any())
-             ->method('getDataType')
-             ->willReturn('not users'); // different data type
+        $this->assertFalse($stub->shouldActionDisplayOnDataType());
+    }
+
+    /**
+     * This test checks that `shouldActionDisplayOnDataType` returns false
+     * when the action is filtered by a different DataType object.
+     */
+    public function testShouldActionDisplayOnDataTypeReturnsFalseWithDifferentDataTypeObject()
+    {
+        $differentDataType = clone $this->userDataType;
+        $differentDataType->name = 'posts';
+
+        $stub = $this->makeTestAction(dataTypeResolver: fn () => $differentDataType);
 
         $this->assertFalse($stub->shouldActionDisplayOnDataType());
     }

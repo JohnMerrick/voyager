@@ -49,9 +49,15 @@ abstract class AbstractAction implements ActionInterface
 
     public function shouldActionDisplayOnDataType(): bool
     {
-        $dt = $this->getDataType(); // string|null
+        $dt = $this->getDataType();
 
-        return $dt === null || ($this->dataType?->name === $dt);
+        if ($dt === null) {
+            return true;
+        }
+
+        $dataTypeName = is_string($dt) ? $dt : ($dt->name ?? null);
+
+        return $this->dataType?->name === $dataTypeName;
     }
 
     public function shouldActionDisplayOnRow($row)
