@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '1.*'
+      - 'laravel-13-support'
   pull_request:
     types:
       - synchronize
@@ -18,45 +19,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: [7.3, 7.4, 8.0, 8.1, 8.2]
-        laravel: ['8.*', '9.*', '10.*']
-        exclude:
-          - php: 8.2
-            laravel: 8.*
-          - php: 7.3
-            laravel: 9.*
-          - php: 7.4
-            laravel: 9.*
-          - php: 8.2
-            laravel: 9.*
-          - php: 7.3
-            laravel: 10.*
-          - php: 7.4
-            laravel: 10.*
-          - php: 8.0
-            laravel: 10.*
+        php: ['8.3', '8.4']
+        laravel: ['11.*', '12.*', '13.*']
 
     name: 'PHP ${{ matrix.php }} / Laravel ${{ matrix.laravel }}'
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
 
       # Configure PHP
       - name: Select PHP version
-        uses: shivammathur/setup-php@master
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '${{ matrix.php }}'
           extensions: mbstring, pdo_sqlite, fileinfo, gd
           coverage: none
 
       # Configure NPM
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v4
         with:
-          node-version: '16.x'
+          node-version: '20.x'
 
       # Install PHP dependencies
       - name: Install Composer dependencies
-        run: composer require "illuminate/support:${{ matrix.laravel }}"
+        run: composer require "laravel/framework:${{ matrix.laravel }}" --with-all-dependencies
 
       # Display installed laravel version
       - name: Show laravel version

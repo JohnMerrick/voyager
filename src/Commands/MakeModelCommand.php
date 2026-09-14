@@ -8,6 +8,14 @@ use Symfony\Component\Console\Input\InputOption;
 class MakeModelCommand extends ModelMakeCommand
 {
     /**
+     * Do not inherit Laravel's make:model signature, which would register this
+     * command under the framework command name and omit Voyager's options.
+     *
+     * @var string|null
+     */
+    protected $signature;
+
+    /**
      * The console command name.
      *
      * @var string

@@ -43,10 +43,10 @@ After creating your new Laravel application you can include the Voyager package 
 composer require johnmerrick/voyager
 ```
 
-> If you are installing this on Laravel 10+,
+> For Laravel 11, 12, or 13 support before the next tagged release,
 
 ```bash
-composer require johnmerrick/voyager@1.8
+composer require johnmerrick/voyager:dev-laravel-13-support
 ```
 
 ### 2. Add the DB Credentials & APP_URL
