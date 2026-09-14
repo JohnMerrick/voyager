@@ -3,6 +3,7 @@
 namespace TCG\Voyager\Tests;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use TCG\Voyager\Models\Menu;
 
 class MenuTest extends TestCase
@@ -88,5 +89,13 @@ class MenuTest extends TestCase
         $menu = Menu::where('name', '=', 'admin')->first();
         $response = $this->call('GET', route('voyager.menus.builder', ['menu' => $menu->id]));
         $this->assertEquals(200, $response->status());
+    }
+
+    public function testDisplayingMenuDoesNotPersistEloquentModelsInCache()
+    {
+        Cache::forget('voyager_menu_admin');
+
+        $this->assertNotFalse(Menu::display('admin', '_json'));
+        $this->assertFalse(Cache::has('voyager_menu_admin'));
     }
 }

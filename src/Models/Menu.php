@@ -52,14 +52,13 @@ class Menu extends Model
      */
     public static function display($menuName, $type = null, array $options = [])
     {
-        // GET THE MENU - sort collection in blade
-        $menu = \Cache::remember('voyager_menu_'.$menuName, \Carbon\Carbon::now()->addDays(30), function () use ($menuName) {
-            return static::where('name', '=', $menuName)
+        // Laravel 13 disables object deserialization from cache by default. Query the
+        // small menu tree directly instead of persisting Eloquent models in cache.
+        $menu = static::where('name', '=', $menuName)
             ->with(['parent_items.children' => function ($q) {
                 $q->orderBy('order');
             }])
             ->first();
-        });
 
         // Check for Menu Existence
         if (!isset($menu)) {
